@@ -24,6 +24,7 @@
 - **🎤 Sampler**: carga WAV/MP3 (botón o drag & drop), editor de waveform con selección de región, trim, normalize, reverse, modo cromático o por slices (2–16) y pads con grabación en vivo.
 - **🎬 Scene Arranger**: 8 escenas (A–H) + timeline de canción por bloques con loop.
 - **⬤ Tape Out**: graba el Pattern o la Song en tiempo real y exporta a **WAV 16-bit** o **MP3** (128/192/320 kbps), con preescucha y descarga directa.
+- **💾 Proyecto en JSON**: guarda/carga el proyecto completo (patrones, mezcla, master, song) o escenas sueltas en `.json` para seguir editando otro día. También puedes arrastrar el `.json` sobre la barra Data.
 - **💡 Knobs retroiluminados** con anillo LED que responde al valor y a la interacción.
 - **⌨️ Atajos**: `Espacio` = Play/Stop · `A W S E D F T G Y H U J K` = tocar notas.
 

@@ -61,6 +61,20 @@ interface State {
   clearScene: () => void;
   setRuntime: (p: Partial<Pick<State, 'playing' | 'playStep' | 'playScene' | 'songPos' | 'sampleVersion'>>) => void;
   resetAll: () => void;
+  loadProject: (d: {
+    tracks: Track[];
+    scenes: Scene[];
+    song: number[];
+    songLoop: boolean;
+    selectedScene: number;
+    selectedTrack: string;
+    bpm: number;
+    swing: number;
+    mode: PlayMode;
+    master: MasterParams;
+    sampler: SamplerSettings;
+  }) => void;
+  loadScene: (patterns: Record<string, Pattern>, name?: string) => void;
 }
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
@@ -203,6 +217,31 @@ export const useStore = create<State>()(
 
       setRuntime: (p) => set(p),
       resetAll: () => set({ ...initial() }),
+
+      loadProject: (d) =>
+        set(() => ({
+          tracks: clone(d.tracks),
+          scenes: clone(d.scenes),
+          song: [...d.song],
+          songLoop: d.songLoop,
+          selectedScene: d.selectedScene,
+          selectedTrack: d.selectedTrack,
+          bpm: d.bpm,
+          swing: d.swing,
+          mode: d.mode,
+          master: { ...d.master },
+          sampler: { ...d.sampler },
+        })),
+
+      loadScene: (patterns, name) =>
+        set((s) => {
+          const scenes = s.scenes.slice();
+          scenes[s.selectedScene] = {
+            name: name ?? scenes[s.selectedScene].name,
+            patterns: clone(patterns),
+          };
+          return { scenes };
+        }),
     }),
     {
       name: 'yuvoneitor-v1',

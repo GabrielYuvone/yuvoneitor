@@ -3,6 +3,7 @@ import { engine } from './audio/engine';
 import { audition, bindEngine, togglePlay } from './audio/sequencer';
 import { ChannelStrip } from './components/ChannelStrip';
 import { DrumEditor, PianoRoll } from './components/PianoRoll';
+import { ProjectIO } from './components/ProjectIO';
 import { SamplerEditor } from './components/SamplerEditor';
 import { SceneArranger } from './components/SceneArranger';
 import { SequencerGrid } from './components/SequencerGrid';
@@ -100,11 +101,16 @@ export default function App() {
           <SceneArranger />
           <SequencerGrid />
           <TrackDetail />
-          <div className="flex flex-wrap items-center justify-between gap-2 px-2 pb-1 text-[9px] uppercase tracking-[0.25em] text-zinc-600">
-            <span>YUVONEITOR · Web Audio Synthesis Engine · 11 tracks · 8 scenes · 16 steps</span>
-            <button className="hw-btn !text-[9px]" onClick={() => confirm('¿Restaurar el proyecto demo? Se perderán los cambios.') && useStore.getState().resetAll()}>
-              Reset demo
-            </button>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-2 pb-1">
+            <span className="text-[9px] uppercase tracking-[0.25em] text-zinc-600">
+              YUVONEITOR · Web Audio Synthesis Engine · 11 tracks · 8 scenes · 16 steps
+            </span>
+            <div className="ml-auto flex flex-wrap items-center gap-1.5">
+              <ProjectIO />
+              <button className="hw-btn !px-2 !py-1 !text-[9px]" onClick={() => confirm('¿Restaurar el proyecto demo? Se perderán los cambios.') && useStore.getState().resetAll()}>
+                Reset demo
+              </button>
+            </div>
           </div>
         </div>
         <div className="wood hidden w-5 shrink-0 rounded-r-xl xl:block" />
