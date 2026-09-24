@@ -101,7 +101,7 @@ export default function App() {
           <SequencerGrid />
           <TrackDetail />
           <div className="flex flex-wrap items-center justify-between gap-2 px-2 pb-1 text-[9px] uppercase tracking-[0.25em] text-zinc-600">
-            <span>NovaBox-16 · Web Audio Synthesis Engine · 11 tracks · 8 scenes · 16 steps</span>
+            <span>YUVONEITOR · Web Audio Synthesis Engine · 11 tracks · 8 scenes · 16 steps</span>
             <button className="hw-btn !text-[9px]" onClick={() => confirm('¿Restaurar el proyecto demo? Se perderán los cambios.') && useStore.getState().resetAll()}>
               Reset demo
             </button>

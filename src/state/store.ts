@@ -205,7 +205,7 @@ export const useStore = create<State>()(
       resetAll: () => set({ ...initial() }),
     }),
     {
-      name: 'novabox16-v1',
+      name: 'yuvoneitor-v1',
       partialize: (s) => ({
         tracks: s.tracks,
         scenes: s.scenes,

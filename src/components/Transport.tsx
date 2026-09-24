@@ -82,9 +82,10 @@ export function Transport() {
         <div className="screw left-1.5 top-1.5" />
         <div className="screw right-1.5 top-1.5" />
         <div className="mt-2">
-          <div className="bg-gradient-to-b from-zinc-100 to-zinc-500 bg-clip-text text-2xl font-black italic tracking-tight text-transparent">
-            NOVABOX<span className="text-[var(--amber)] drop-shadow-[0_0_8px_#ffb347]">-16</span>
+          <div className="bg-gradient-to-b from-zinc-100 to-zinc-500 bg-clip-text text-[27px] font-black italic leading-none tracking-[-0.02em] text-transparent">
+            YUVONEITOR
           </div>
+          <div className="mt-1.5 h-[3px] w-full rounded-full bg-gradient-to-r from-[var(--amber)] via-[var(--amber)]/40 to-transparent shadow-[0_0_8px_#ffb347]" />
           <div className="silk mt-0.5 !text-[8px]">Analog Modeling Groovebox</div>
         </div>
         <div className="mt-3 flex items-center gap-2">
