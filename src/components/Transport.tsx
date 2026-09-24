@@ -1,8 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { engine } from '../audio/engine';
 import { togglePlay, play, stop } from '../audio/sequencer';
 import { DELAY_DIVS, SCENE_NAMES, STEPS } from '../audio/types';
 import { useStore } from '../state/store';
+import { ExportDialog } from './ExportDialog';
 import { Knob } from './Knob';
 
 function Scope() {
@@ -72,6 +73,7 @@ export function Transport() {
   const songLen = useStore((s) => s.song.length);
   const master = useStore((s) => s.master);
   const { setBpm, setSwing, setMode, setMaster } = useStore.getState();
+  const [showExport, setShowExport] = useState(false);
 
   const shownScene = playing ? playScene : selectedScene;
 
@@ -101,7 +103,16 @@ export function Transport() {
             ■ Stop
           </button>
         </div>
+        <button
+          className="hw-btn mt-2 w-full !py-1.5"
+          style={{ ['--c' as string]: '#ff4d5e' }}
+          onClick={() => setShowExport(true)}
+          title="Grabar el pattern o la song y exportar a WAV/MP3"
+        >
+          <span className="led mr-1.5" style={{ ['--c' as string]: '#ff4d5e' }} /> ⬤ Export WAV / MP3
+        </button>
       </div>
+      {showExport && <ExportDialog onClose={() => setShowExport(false)} />}
 
       {/* LCD */}
       <div className="panel flex min-w-[330px] flex-1 flex-col gap-2 p-3">

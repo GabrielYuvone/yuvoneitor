@@ -93,6 +93,15 @@ export class AudioEngine {
     return this.ctx ? this.ctx.currentTime : 0;
   }
 
+  /** Bus maestro post-fader: punto de pinchazo para grabar el bounce a disco */
+  get recordSource(): AudioNode | null {
+    return this.ctx ? this.masterGain : null;
+  }
+
+  get sampleRate(): number {
+    return this.ctx ? this.ctx.sampleRate : 48000;
+  }
+
   init() {
     if (this.ctx) {
       if (this.ctx.state === 'suspended') this.ctx.resume();
