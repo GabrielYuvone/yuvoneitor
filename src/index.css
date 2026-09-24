@@ -1,0 +1,281 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "LCD";
+  src: local("Share Tech Mono"), local("Consolas");
+}
+
+:root {
+  --amber: #ffb347;
+  --cyan: #34e7ff;
+  --red: #ff4d5e;
+  --green: #7dff9a;
+  --violet: #b98cff;
+  --pink: #ff4d8d;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background:
+    radial-gradient(ellipse at 50% -10%, #23262d 0%, #0b0c0f 55%, #050507 100%) fixed;
+  color: #d4d4d8;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+
+/* ---------- Chasis ---------- */
+.chassis {
+  position: relative;
+  border-radius: 14px;
+  padding: 14px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 2px),
+    linear-gradient(180deg, #2b2e35 0%, #1c1e23 40%, #16171b 100%);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.6);
+  border: 1px solid #0a0a0c;
+}
+.wood {
+  background:
+    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.18) 0 2px, transparent 2px 7px),
+    repeating-linear-gradient(88deg, rgba(255, 190, 120, 0.06) 0 1px, transparent 1px 11px),
+    linear-gradient(180deg, #5a3620, #3a2214 60%, #2a170d);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.7), 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.panel {
+  position: relative;
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, #202227 0%, #17181c 100%);
+  border: 1px solid #0b0b0d;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.015),
+    0 2px 6px rgba(0, 0, 0, 0.5);
+}
+.panel-inset {
+  border-radius: 6px;
+  background: linear-gradient(180deg, #111215, #16171a);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  border: 1px solid #070708;
+}
+.silk {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #8b8f99;
+}
+.silk-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.silk-line::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.14), transparent);
+}
+
+.screw {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #9aa0aa, #3b3f46 60%, #1a1b1f);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.8), inset 0 0 1px rgba(0, 0, 0, 0.8);
+}
+.screw::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 4.5px;
+  height: 1px;
+  background: #15161a;
+  transform: rotate(35deg);
+}
+
+/* ---------- LCD ---------- */
+.lcd {
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at 50% 40%, #0f2a2c 0%, #071517 70%, #040b0c 100%);
+  border: 2px solid #050607;
+  border-radius: 6px;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: var(--cyan);
+  font-family: "Share Tech Mono", "JetBrains Mono", ui-monospace, monospace;
+  text-shadow: 0 0 6px rgba(52, 231, 255, 0.7);
+}
+.lcd-mini {
+  background: #0a0b0d;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9);
+  font-family: "Share Tech Mono", ui-monospace, monospace;
+}
+
+/* ---------- Botones de hardware ---------- */
+.hw-btn {
+  --c: var(--amber);
+  position: relative;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+  background: linear-gradient(180deg, #34373e, #22242a);
+  border: 1px solid #0a0a0c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 0 #0a0a0c, 0 3px 4px rgba(0, 0, 0, 0.5);
+  transition: all 0.08s;
+  cursor: pointer;
+  user-select: none;
+}
+.hw-btn:hover {
+  color: #e4e4e7;
+}
+.hw-btn:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 0 #0a0a0c;
+}
+.hw-btn.on {
+  color: #111;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 100%, white 20%), var(--c));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--c) 70%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 0 #0a0a0c;
+  transform: translateY(1px);
+}
+.hw-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.led {
+  --c: var(--red);
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #3a3a3a, #141414);
+  box-shadow: inset 0 0 2px #000;
+  transition: all 0.06s;
+}
+.led.on {
+  background: radial-gradient(circle at 35% 30%, #fff, var(--c) 45%, color-mix(in srgb, var(--c) 60%, black));
+  box-shadow: 0 0 8px var(--c), 0 0 2px var(--c);
+}
+
+/* ---------- Steps ---------- */
+.step {
+  --c: var(--amber);
+  position: relative;
+  height: 30px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #2c2f35, #1d1f24);
+  border: 1px solid #08080a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 0 #08080a;
+  cursor: pointer;
+  transition: background 0.05s, box-shadow 0.05s;
+  overflow: hidden;
+}
+.step.beat {
+  background: linear-gradient(180deg, #353841, #25272d);
+}
+.step:hover {
+  filter: brightness(1.25);
+}
+.step.on {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 85%, white 15%), color-mix(in srgb, var(--c) 70%, black 30%));
+  box-shadow: 0 0 10px color-mix(in srgb, var(--c) 55%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 2px 0 #08080a;
+}
+.step.play {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: -2px;
+}
+.step.on.play {
+  filter: brightness(1.5);
+  box-shadow: 0 0 22px var(--c), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.step .acc {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 5px #fff;
+}
+
+/* ---------- Piano roll ---------- */
+.roll-cell {
+  --c: var(--amber);
+  height: 14px;
+  border-right: 1px solid rgba(0, 0, 0, 0.55);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+.roll-cell:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+.roll-cell.on {
+  background: var(--c) !important;
+  box-shadow: 0 0 8px var(--c), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border-radius: 2px;
+}
+
+/* ---------- Song blocks ---------- */
+.song-block {
+  --c: var(--amber);
+  position: relative;
+  min-width: 42px;
+  height: 44px;
+  border-radius: 5px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 30%, #1b1c20), color-mix(in srgb, var(--c) 12%, #111214));
+  border: 1px solid color-mix(in srgb, var(--c) 40%, black);
+  color: var(--c);
+  text-shadow: 0 0 6px var(--c);
+  cursor: pointer;
+}
+.song-block.playing {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 80%, white 10%), color-mix(in srgb, var(--c) 55%, black));
+  color: #0b0b0d;
+  text-shadow: none;
+  box-shadow: 0 0 16px var(--c);
+}
+
+.pad {
+  --c: var(--pink);
+  aspect-ratio: 1;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #33363d, #1f2126);
+  border: 1px solid #08080a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 3px 0 #08080a;
+  transition: all 0.05s;
+  cursor: pointer;
+}
+.pad:active,
+.pad.hit {
+  background: radial-gradient(circle, color-mix(in srgb, var(--c) 90%, white 10%), color-mix(in srgb, var(--c) 50%, black));
+  box-shadow: 0 0 18px var(--c);
+  transform: translateY(2px);
+}
+
+::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #33363d;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #0d0e10;
+}
