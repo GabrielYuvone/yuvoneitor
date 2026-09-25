@@ -111,7 +111,7 @@ export function ProjectIO() {
         setDropHover(false);
         const f = e.dataTransfer.files?.[0];
         if (f && /\.json$/i.test(f.name)) applyProjectFile(f);
-        else if (f) say({ kind: 'err', text: 'Suelta un .json de proyecto Yuvoneitor.' });
+        else if (f) say({ kind: 'err', text: 'Suelta un .json de proyecto Yuvoneitor2000.' });
       }}
       title="Arrastra un .json de proyecto aquí para cargarlo"
     >

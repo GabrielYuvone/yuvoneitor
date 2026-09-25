@@ -262,7 +262,7 @@ async function runBounce(req: BounceRequest, registerCancel: (fn: () => void) =>
     const right = mergeChunks(rightChunks, needSamples);
     const ext = req.format === 'wav' ? 'wav' : 'mp3';
     const blob = req.format === 'wav' ? encodeWAV(left, right, sampleRate) : encodeMP3(left, right, sampleRate, req.mp3Kbps);
-    const filename = `yuvoneitor-${plan.label}-${plan.bpm}bpm.${ext}`;
+    const filename = `yuvoneitor2000-${plan.label}-${plan.bpm}bpm.${ext}`;
     return {
       blob,
       url: URL.createObjectURL(blob),

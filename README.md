@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎛️ YUVONEITOR
+# 🎛️ YUVONEITOR2000
 
 **Groovebox analógica virtual — 11 pistas · 8 escenas · 16 pasos**
 

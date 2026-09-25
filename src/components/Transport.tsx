@@ -84,8 +84,13 @@ export function Transport() {
         <div className="screw left-1.5 top-1.5" />
         <div className="screw right-1.5 top-1.5" />
         <div className="mt-2">
-          <div className="bg-gradient-to-b from-zinc-100 to-zinc-500 bg-clip-text text-[27px] font-black italic leading-none tracking-[-0.02em] text-transparent">
-            YUVONEITOR
+          <div className="flex items-baseline gap-[3px] leading-none">
+            <span className="bg-gradient-to-b from-zinc-100 to-zinc-500 bg-clip-text text-[26px] font-black italic tracking-[-0.02em] text-transparent">
+              YUVONEITOR
+            </span>
+            <span className="text-[22px] font-black italic tracking-[-0.03em] text-[var(--amber)] [text-shadow:0_0_10px_#ffb347]">
+              2000
+            </span>
           </div>
           <div className="mt-1.5 h-[3px] w-full rounded-full bg-gradient-to-r from-[var(--amber)] via-[var(--amber)]/40 to-transparent shadow-[0_0_8px_#ffb347]" />
           <div className="silk mt-0.5 !text-[8px]">Analog Modeling Groovebox</div>

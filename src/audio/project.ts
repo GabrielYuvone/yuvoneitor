@@ -21,6 +21,10 @@ import type { PlayMode } from '../state/store';
 export const PROJECT_KIND = 'yuvoneitor-project';
 export const SCENE_KIND = 'yuvoneitor-scene';
 export const PROJECT_VERSION = 1;
+/** Marca actual + variantes anteriores aceptadas al cargar */
+export const APP_ID = 'YUVONEITOR2000';
+const APP_IDS: readonly string[] = [APP_ID, 'YUVONEITOR'];
+const isKnownApp = (v: unknown) => typeof v === 'string' && APP_IDS.includes(v);
 
 export interface ProjectData {
   bpm: number;
@@ -37,7 +41,7 @@ export interface ProjectData {
 }
 
 export interface ProjectFile {
-  app: 'YUVONEITOR';
+  app: string;
   kind: typeof PROJECT_KIND;
   version: number;
   exportedAt: string;
@@ -46,7 +50,7 @@ export interface ProjectFile {
 }
 
 export interface SceneFile {
-  app: 'YUVONEITOR';
+  app: string;
   kind: typeof SCENE_KIND;
   version: number;
   exportedAt: string;
@@ -183,11 +187,11 @@ export function buildProjectFile(s: {
   sampler: SamplerSettings;
 }): ProjectFile {
   return {
-    app: 'YUVONEITOR',
+    app: APP_ID,
     kind: PROJECT_KIND,
     version: PROJECT_VERSION,
     exportedAt: new Date().toISOString(),
-    name: `Yuvoneitor ${s.bpm} BPM · ${s.song.length} bars`,
+    name: `Yuvoneitor2000 ${s.bpm} BPM · ${s.song.length} bars`,
     data: {
       bpm: Math.round(s.bpm),
       swing: s.swing,
@@ -206,7 +210,7 @@ export function buildProjectFile(s: {
 
 export function buildSceneFile(scene: Scene): SceneFile {
   return {
-    app: 'YUVONEITOR',
+    app: APP_ID,
     kind: SCENE_KIND,
     version: PROJECT_VERSION,
     exportedAt: new Date().toISOString(),
@@ -221,9 +225,9 @@ export function buildSceneFile(scene: Scene): SceneFile {
 /* ---------------- parse / validate ---------------- */
 
 export function parseProjectFile(raw: unknown): ProjectData {
-  if (!isRecord(raw)) throw new Error('El archivo no es un JSON válido de Yuvoneitor.');
-  if (raw.app !== 'YUVONEITOR' || raw.kind !== PROJECT_KIND)
-    throw new Error('No es un proyecto de Yuvoneitor (.json de “Guardar proyecto”).');
+  if (!isRecord(raw)) throw new Error('El archivo no es un JSON válido de Yuvoneitor2000.');
+  if (!isKnownApp(raw.app) || raw.kind !== PROJECT_KIND)
+    throw new Error('No es un proyecto de Yuvoneitor2000 (.json de “Guardar proyecto”).');
   if (!isRecord(raw.data)) throw new Error('Proyecto corrupto: falta el bloque de datos.');
   const d = raw.data;
 
@@ -272,9 +276,9 @@ export function parseProjectFile(raw: unknown): ProjectData {
 }
 
 export function parseSceneFile(raw: unknown, trackIds: string[]): { name: string; patterns: Record<string, Pattern> } {
-  if (!isRecord(raw)) throw new Error('El archivo no es un JSON válido de Yuvoneitor.');
-  if (raw.app !== 'YUVONEITOR' || raw.kind !== SCENE_KIND)
-    throw new Error('No es un pattern de Yuvoneitor (.json de “Guardar escena”).');
+  if (!isRecord(raw)) throw new Error('El archivo no es un JSON válido de Yuvoneitor2000.');
+  if (!isKnownApp(raw.app) || raw.kind !== SCENE_KIND)
+    throw new Error('No es un pattern de Yuvoneitor2000 (.json de “Guardar escena”).');
   if (!isRecord(raw.data)) throw new Error('Pattern corrupto: falta el bloque de datos.');
   return {
     name: str(raw.data.name, 'Escena', 40),
@@ -290,7 +294,7 @@ const stamp = () => {
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
 };
 
-export const projectFilename = (bpm: number) => `yuvoneitor-proyecto-${Math.round(bpm)}bpm-${stamp()}.json`;
+export const projectFilename = (bpm: number) => `yuvoneitor2000-proyecto-${Math.round(bpm)}bpm-${stamp()}.json`;
 export const sceneFilename = (sceneName: string) => {
   const slug = sceneName
     .toLowerCase()
@@ -299,7 +303,7 @@ export const sceneFilename = (sceneName: string) => {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 24);
-  return `yuvoneitor-escena-${slug || 'pattern'}-${stamp()}.json`;
+  return `yuvoneitor2000-escena-${slug || 'pattern'}-${stamp()}.json`;
 };
 
 export function downloadJson(obj: unknown, filename: string) {

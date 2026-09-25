@@ -103,7 +103,7 @@ export default function App() {
           <TrackDetail />
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-2 pb-1">
             <span className="text-[9px] uppercase tracking-[0.25em] text-zinc-600">
-              YUVONEITOR · Web Audio Synthesis Engine · 11 tracks · 8 scenes · 16 steps
+              YUVONEITOR2000 · Web Audio Synthesis Engine · 11 tracks · 8 scenes · 16 steps
             </span>
             <div className="ml-auto flex flex-wrap items-center gap-1.5">
               <ProjectIO />
