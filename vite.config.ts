@@ -16,4 +16,8 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
+  server: {
+    // acepta el host del preview proxado (p.ej. 5173-<sandbox>.e2b.app)
+    allowedHosts: true,
+  },
 });

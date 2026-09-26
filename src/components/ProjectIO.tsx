@@ -9,18 +9,22 @@ import {
   readJsonFile,
   sceneFilename,
 } from '../audio/project';
+import { parseMidi, type MidiFile } from '../audio/midi';
 import { SCENE_NAMES } from '../audio/types';
 import { stop } from '../audio/sequencer';
 import { useStore } from '../state/store';
+import { MidiImportDialog } from './MidiImportDialog';
 
 type Msg = { kind: 'ok' | 'err'; text: string } | null;
 
 export function ProjectIO() {
   const projectRef = useRef<HTMLInputElement>(null);
   const sceneRef = useRef<HTMLInputElement>(null);
+  const midiRef = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState<Msg>(null);
   const [busy, setBusy] = useState(false);
   const [dropHover, setDropHover] = useState(false);
+  const [midiDlg, setMidiDlg] = useState<{ fileName: string; midi: MidiFile } | null>(null);
   const timer = useRef(0);
 
   const say = (m: Msg) => {
@@ -94,6 +98,19 @@ export function ProjectIO() {
     }
   };
 
+  const applyMidiFile = async (file: File | undefined) => {
+    if (!file || busy) return;
+    setBusy(true);
+    try {
+      const midi = parseMidi(await file.arrayBuffer());
+      setMidiDlg({ fileName: file.name, midi });
+    } catch (e) {
+      say({ kind: 'err', text: e instanceof Error ? e.message : 'No se pudo leer el archivo MIDI.' });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const selectedScene = useStore((s) => s.selectedScene);
 
   return (
@@ -111,9 +128,10 @@ export function ProjectIO() {
         setDropHover(false);
         const f = e.dataTransfer.files?.[0];
         if (f && /\.json$/i.test(f.name)) applyProjectFile(f);
-        else if (f) say({ kind: 'err', text: 'Suelta un .json de proyecto Yuvoneitor2000.' });
+        else if (f && /\.midi?$/i.test(f.name)) applyMidiFile(f);
+        else if (f) say({ kind: 'err', text: 'Suelta un .json de proyecto o un archivo .mid.' });
       }}
-      title="Arrastra un .json de proyecto aquí para cargarlo"
+      title="Arrastra un .json de proyecto o un .mid aquí para cargarlo"
     >
       <span className="silk !text-[8px]">Data</span>
       <input
@@ -143,11 +161,25 @@ export function ProjectIO() {
         📂 Abrir
       </button>
       <span className="mx-0.5 h-4 w-px bg-white/10" />
+      <input
+        ref={midiRef}
+        type="file"
+        accept=".mid,.midi,audio/midi,audio/x-midi"
+        className="hidden"
+        onChange={(e) => {
+          applyMidiFile(e.target.files?.[0]);
+          e.target.value = '';
+        }}
+      />
       <button className="hw-btn !px-2 !py-1 !text-[9px]" style={{ ['--c' as string]: '#34e7ff' }} onClick={saveScene} title={`Guardar el pattern de la escena ${SCENE_NAMES[selectedScene]} en .json`}>
         💾 Esc {SCENE_NAMES[selectedScene]}
       </button>
       <button className="hw-btn !px-2 !py-1 !text-[9px]" onClick={() => sceneRef.current?.click()} disabled={busy} title={`Cargar un pattern .json en la escena ${SCENE_NAMES[selectedScene]}`}>
         📂 Esc
+      </button>
+      <span className="mx-0.5 h-4 w-px bg-white/10" />
+      <button className="hw-btn !px-2 !py-1 !text-[9px]" style={{ ['--c' as string]: '#b98cff' }} onClick={() => midiRef.current?.click()} disabled={busy} title="Importar un archivo MIDI (.mid): canal 10 → batería GM, resto → pista melódica a elegir">
+        🎼 MIDI
       </button>
       {msg && (
         <span
@@ -158,6 +190,14 @@ export function ProjectIO() {
         >
           {msg.kind === 'ok' ? '✔ ' : '✖ '}{msg.text}
         </span>
+      )}
+      {midiDlg && (
+        <MidiImportDialog
+          fileName={midiDlg.fileName}
+          midi={midiDlg.midi}
+          onDone={say}
+          onClose={() => setMidiDlg(null)}
+        />
       )}
     </div>
   );
