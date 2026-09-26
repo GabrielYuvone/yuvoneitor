@@ -91,8 +91,6 @@ export function Transport() {
             className="w-[170px] max-w-full h-auto block select-none"
             draggable={false}
           />
-          <div className="mt-1.5 h-[3px] w-full rounded-full bg-gradient-to-r from-[var(--amber)] via-[var(--amber)]/40 to-transparent shadow-[0_0_8px_#ffb347]" />
-          <div className="silk mt-0.5 !text-[8px]">Analog Modeling Groovebox</div>
         </div>
         <div className="mt-3 flex items-center gap-2">
           <button
