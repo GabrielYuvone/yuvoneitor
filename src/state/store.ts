@@ -75,6 +75,9 @@ interface State {
     sampler: SamplerSettings;
   }) => void;
   loadScene: (patterns: Record<string, Pattern>, name?: string) => void;
+  /** Reemplaza (por pista) los patterns indicados en la escena dada; el resto se conserva */
+  importPatterns: (sceneIndex: number, patterns: Record<string, Pattern>) => void;
+  songReplace: (song: number[]) => void;
 }
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
@@ -242,6 +245,22 @@ export const useStore = create<State>()(
           };
           return { scenes };
         }),
+
+      importPatterns: (sceneIndex, patterns) =>
+        set((s) => {
+          const i = Math.min(Math.max(0, sceneIndex), s.scenes.length - 1);
+          const scenes = s.scenes.slice();
+          scenes[i] = {
+            ...scenes[i],
+            patterns: {
+              ...scenes[i].patterns,
+              ...clone(patterns),
+            },
+          };
+          return { scenes };
+        }),
+
+      songReplace: (song) => set({ song: song.slice(0, 64) }),
     }),
     {
       name: 'yuvoneitor-v1',

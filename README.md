@@ -22,6 +22,7 @@
 - **🎛️ Channel strip por pista**: 6 formas de onda, FM, filtro multimodo LP/HP/BP/Notch, ADSR completa, LFO asignable, drive, envíos de reverb/delay.
 - **🎚️ Master bus**: saturación, compresor, reverb generativa y delay ping-pong sincronizado al tempo.
 - **🎤 Sampler**: carga WAV/MP3 (botón o drag & drop), editor de waveform con selección de región, trim, normalize, reverse, modo cromático o por slices (2–16) y pads con grabación en vivo.
+- **🎼 Import MIDI**: carga archivos `.mid` (botón MIDI o arrastrándolos a la barra Data). El canal 10 entra por mapa GM a la batería (BD/SD/CH/OH/CP) y el resto de las notas va a la pista melódica que elijas, cuantizado a 16 avos, con acentos por velocity (≥100), cambio de octava y vista previa del mapeo. Podés importar un compás a la escena actual o hasta 8 compases consecutivos a las escenas A–H (con el song armado automáticamente) y aplicar el BPM detectado en el archivo.
 - **🎬 Scene Arranger**: 8 escenas (A–H) + timeline de canción por bloques con loop.
 - **⬤ Tape Out**: graba el Pattern o la Song en tiempo real y exporta a **WAV 16-bit** o **MP3** (128/192/320 kbps), con preescucha y descarga directa.
 - **💾 Proyecto en JSON**: guarda/carga el proyecto completo (patrones, mezcla, master, song) o escenas sueltas en `.json` para seguir editando otro día. También puedes arrastrar el `.json` sobre la barra Data.
@@ -49,10 +50,12 @@ src/
 ├── audio/
 │   ├── engine.ts      # Motor de síntesis y mezcla (Web Audio API)
 │   ├── sequencer.ts   # Secuenciador look-ahead + binding con el store
+│   ├── midi.ts        # Parser SMF + mapeo de archivos .mid a patterns
 │   └── types.ts       # Tipos, presets de pistas y escenas demo
 ├── state/store.ts     # Estado global (zustand + persist)
 ├── components/        # Transport, SceneArranger, SequencerGrid,
-│                       # ChannelStrip, PianoRoll, SamplerEditor, Knob
+│                       # ChannelStrip, PianoRoll, SamplerEditor,
+│                       # ProjectIO, MidiImportDialog, ExportDialog, Knob
 ├── App.tsx
 └── index.css          # Estética hardware retro
 ```
