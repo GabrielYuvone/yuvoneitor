@@ -19,6 +19,7 @@
 
 - **🥁 Batería 808 sintetizada** en tiempo real (sin samples): kick con pitch-sweep, snare tono+ruido, hi-hats metálicos con choke, claps.
 - **🎹 5 sintetizadores**: Moog Bass (filtro 24 dB/oct), Acid 303 (resonante, glide, accent), Poly Pad (supersaw), Ambient (FM) y Pluck.
+- **🤖 Robo Voice (pistas agregables)**: botón **＋ Voz** para sumar pistas de canto robot estilo Kraftwerk, 100% sintetizado con formantes (sin samples ni TTS). Escribís una frase y cada paso activo del pattern la dispara completa desde el principio (si se redispara, se corta y arranca de nuevo), canta una octava abajo de la nota (registro robot) con timbre de hard-clip. Ya viene en el demo con *"we are the robots"* (escenas A, C y D). Fonética **inglesa** (digrafos sh/th/ch/oo/ee/igh, magic-e, sight words) o **castellana** (seseo rioplatense, v→b, h muda, ñ, rr) con selector por pista; knobs de velocidad y vibrato. Todo lo que agregues viaja en el proyecto `.json` y en el guardado del navegador.
 - **🎛️ Channel strip por pista**: 6 formas de onda, FM, filtro multimodo LP/HP/BP/Notch, ADSR completa, LFO asignable, drive, envíos de reverb/delay.
 - **🎚️ Master bus**: saturación, compresor, reverb generativa y delay ping-pong sincronizado al tempo.
 - **🎤 Sampler**: carga WAV/MP3 (botón o drag & drop), editor de waveform con selección de región, trim, normalize, reverse, modo cromático o por slices (2–16) y pads con grabación en vivo.
@@ -51,10 +52,11 @@ src/
 │   ├── engine.ts      # Motor de síntesis y mezcla (Web Audio API)
 │   ├── sequencer.ts   # Secuenciador look-ahead + binding con el store
 │   ├── midi.ts        # Parser SMF + mapeo de archivos .mid a patterns
+│   ├── voice.ts       # Texto → fonemas con formantes (voz robot)
 │   └── types.ts       # Tipos, presets de pistas y escenas demo
 ├── state/store.ts     # Estado global (zustand + persist)
 ├── components/        # Transport, SceneArranger, SequencerGrid,
-│                       # ChannelStrip, PianoRoll, SamplerEditor,
+│                       # ChannelStrip, PianoRoll, SamplerEditor, VoiceEditor,
 │                       # ProjectIO, MidiImportDialog, ExportDialog, Knob
 ├── App.tsx
 └── index.css          # Estética hardware retro

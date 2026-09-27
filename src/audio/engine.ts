@@ -9,6 +9,7 @@ import {
   type TrackParams,
   type Wave,
 } from './types';
+import { splitWords, wordToPhones, type Phone } from './voice';
 
 interface TrackNodes {
   input: GainNode;
@@ -27,6 +28,8 @@ interface TrackNodes {
   lastFreq: number;
   mono?: { kill: (t: number) => void; end: number };
   choke?: GainNode;
+  /** voz robot en curso: para cortarla/reiniciarla al redisparar la frase */
+  vox?: { kill: (t: number) => void };
 }
 
 interface Layer {
@@ -58,6 +61,20 @@ function driveCurve(amount: number): Float32Array<ArrayBuffer> {
     curve[i] = Math.tanh(k * (x + 0.04 * amount * x * x)) / norm;
   }
   return curve;
+}
+
+/** Hard-clip suave: filo metálico para el buzzer de la voz robot */
+let GRIT: Float32Array<ArrayBuffer> | null = null;
+function gritCurve(): Float32Array<ArrayBuffer> {
+  if (GRIT) return GRIT;
+  const n = 1024;
+  const c = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2) / n - 1;
+    c[i] = Math.max(-0.86, Math.min(0.86, x * 1.9)) / 0.86;
+  }
+  GRIT = c;
+  return c;
 }
 
 export class AudioEngine {
@@ -390,6 +407,8 @@ export class AudioEngine {
       case 'sampler':
         step.n.forEach((note) => this.playSample(track, n, note, t, dur, step.a));
         return;
+      case 'voz':
+        return this.speak(track, n, step, t);
       default: {
         const notes = track.mono ? [step.n[step.n.length - 1]] : step.n;
         notes.forEach((note) => this.playSynth(track, n, note, t, dur, step.a));
@@ -483,6 +502,174 @@ export class AudioEngine {
         },
       };
     }
+  }
+
+  /* ---------------- Voz robot (banco de formantes) ---------------- */
+
+  /**
+   * Canto robot estilo Kraftwerk: cada paso activado dice la siguiente palabra
+   * del texto de la pista. El buzzer (sierra+cuadrada) pasa por 3 bandpass
+   * cuyas frecuencias glissando entre formantes de fonema en fonema.
+   */
+  private speak(track: Track, n: TrackNodes, step: Step, t: number) {
+    const v = track.voice;
+    if (!v) return;
+    const words = splitWords(v.text);
+    if (!words.length) return;
+    // cada paso activo dispara la FRASE COMPLETA desde el principio; si
+    // vuelve a disparar (otro paso activo), corta lo que sonaba y reinicia
+    const phones: Phone[] = [];
+    for (const w of words) {
+      const ps = wordToPhones(w, v.lang);
+      if (ps.length) phones.push(...ps, { f1: 400, f2: 1700, f3: 2600, noiseHz: 0, dur: 0.05, voiced: false, amp: 0 });
+    }
+    if (!phones.length) return;
+
+    const ctx = this.ctx!;
+    const p = track.params;
+    const note = step.n[step.n.length - 1] ?? track.baseNote;
+    // una octava abajo: registro grave de robot (no de voz humana aguda)
+    const f0 = Math.max(55, mtof(note + p.tune) * 0.5);
+    const speed = Math.max(0.4, Math.min(2.5, v.speed));
+
+    n.vox?.kill(t); // reinicia la frase si ya había una sonando
+
+    // --- fuente buzzer ---
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    osc1.type = 'sawtooth';
+    osc2.type = 'square';
+    const g1 = ctx.createGain();
+    const g2 = ctx.createGain();
+    g1.gain.value = 0.55;
+    g2.gain.value = 0.36;
+    const srcMix = ctx.createGain();
+    osc1.connect(g1).connect(srcMix);
+    osc2.connect(g2).connect(srcMix);
+    // hard-clip: recorte metálico de sintetizador
+    const grit = ctx.createWaveShaper();
+    grit.curve = gritCurve();
+    grit.oversample = '2x';
+    srcMix.connect(grit);
+
+    const vib = ctx.createOscillator();
+    vib.frequency.value = 5.4;
+    const vibG = ctx.createGain();
+    vibG.gain.value = v.vibrato * 24; // cents
+    vib.connect(vibG);
+    vibG.connect(osc1.detune);
+    vibG.connect(osc2.detune);
+    n.lfoPitch.connect(osc1.detune); // el LFO de la pista también modula la voz
+
+    // --- banco de formantes: 3 bandpass paralelos + camino directo ---
+    const sum = ctx.createGain();
+    sum.gain.value = 0;
+    const direct = ctx.createGain();
+    direct.gain.value = 0.045;
+    grit.connect(direct).connect(sum);
+    const bands: BiquadFilterNode[] = [];
+    ([0.42, 0.24, 0.09] as const).forEach((gain, idx) => {
+      const f = ctx.createBiquadFilter();
+      f.type = 'bandpass';
+      f.Q.value = idx === 0 ? 12 : 15; // angostos = morfología sintética, no humana
+      f.frequency.value = 800;
+      const fg = ctx.createGain();
+      fg.gain.value = gain;
+      grit.connect(f).connect(fg).connect(sum);
+      bands.push(f);
+    });
+
+    // ruido para fricativas y ráfagas de oclusivas
+    const ns = ctx.createBufferSource();
+    ns.buffer = this.noise;
+    ns.loop = true;
+    const nf = ctx.createBiquadFilter();
+    nf.type = 'bandpass';
+    nf.Q.value = 1.1;
+    nf.frequency.value = 4000;
+    const ng = ctx.createGain();
+    ng.gain.value = 0;
+    ns.connect(nf).connect(ng).connect(sum);
+    sum.connect(n.input);
+
+    // --- secuencia de fonemas ---
+    let t0 = t + 0.004;
+    phones.forEach((ph, i) => {
+      const d = ph.dur / speed;
+      const prog = i / Math.max(1, phones.length - 1);
+      const pitch = f0 * (1 - 0.025 * prog * prog); // casi monotone: caída mínima
+      osc1.frequency.setTargetAtTime(pitch, t0, 0.012);
+      osc2.frequency.setTargetAtTime(pitch, t0, 0.012);
+      // morph seco: los formantes saltan al target de cada fonema
+      bands[0].frequency.setTargetAtTime(ph.f1, t0, 0.011);
+      bands[1].frequency.setTargetAtTime(ph.f2, t0, 0.011);
+      bands[2].frequency.setTargetAtTime(ph.f3, t0, 0.011);
+      if (ph.noiseHz > 0) nf.frequency.setTargetAtTime(ph.noiseHz, t0, 0.012);
+
+      const peak = ph.amp * (step.a ? 1.3 : 1);
+      if (ph.noiseHz > 0 && !ph.voiced) {
+        // fricativa u oclusiva sorda: se apaga el buzzer, suena el soplo
+        sum.gain.setTargetAtTime(0, t0, 0.006);
+        ng.gain.setTargetAtTime(peak * 0.75, t0, 0.009);
+      } else if (ph.noiseHz > 0) {
+        // oclusiva sonora (b/d/g): buzzer con formantes + soplo leve
+        sum.gain.setTargetAtTime(peak * 0.8, t0, 0.008);
+        ng.gain.setTargetAtTime(peak * 0.12, t0, 0.01);
+      } else if (!ph.voiced) {
+        sum.gain.setTargetAtTime(0, t0, 0.01);
+        ng.gain.setTargetAtTime(0, t0, 0.01);
+      } else {
+        // vocal / nasal / líquida: buzzer con formantes
+        ng.gain.setTargetAtTime(0, t0, 0.015);
+        sum.gain.setTargetAtTime(peak, t0, 0.014);
+      }
+      t0 += d + 0.006 / speed;
+    });
+    const end = t0 + 0.12;
+    sum.gain.setTargetAtTime(0, t0, 0.03); // release de la palabra
+    ng.gain.setTargetAtTime(0, t0, 0.02);
+
+    vib.start(t);
+    vib.stop(end);
+    osc1.start(t);
+    osc1.stop(end);
+    osc2.start(t);
+    osc2.stop(end);
+    ns.start(t, Math.random());
+    ns.stop(end);
+
+    const kill = (kt: number) => {
+      sum.gain.cancelScheduledValues(kt);
+      sum.gain.setTargetAtTime(0, kt, 0.006);
+      ng.gain.cancelScheduledValues(kt);
+      ng.gain.setTargetAtTime(0, kt, 0.006);
+      const stopAt = kt + 0.05;
+      [osc1, osc2, vib, ns].forEach((s) => {
+        try {
+          s.stop(stopAt);
+        } catch {
+          /* ya detenida */
+        }
+      });
+    };
+    n.vox = { kill };
+
+    window.setTimeout(
+      () => {
+        try {
+          n.lfoPitch.disconnect(osc1.detune);
+        } catch {
+          /* noop */
+        }
+        try {
+          sum.disconnect();
+        } catch {
+          /* noop */
+        }
+        if (n.vox && n.vox.kill === kill) n.vox = undefined;
+      },
+      (end - ctx.currentTime) * 1000 + 300,
+    );
   }
 
   private drumOut(p: TrackParams, n: TrackNodes, t: number, accent: boolean, end: number) {

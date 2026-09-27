@@ -8,6 +8,7 @@ import { SamplerEditor } from './components/SamplerEditor';
 import { SceneArranger } from './components/SceneArranger';
 import { SequencerGrid } from './components/SequencerGrid';
 import { Transport } from './components/Transport';
+import { VoiceEditor } from './components/VoiceEditor';
 import { useStore } from './state/store';
 
 const KEYS = 'awsedftgyhujk';
@@ -42,6 +43,14 @@ function TrackDetail() {
               {t.short}
             </button>
           ))}
+          <button
+            className="hw-btn !px-2 !py-1"
+            style={{ ['--c' as string]: '#f43f5e' }}
+            onClick={() => st.addVoiceTrack()}
+            title="Agregar pista de voz robot (escribís texto y la canta estilo Kraftwerk)"
+          >
+            ＋ Voz
+          </button>
         </div>
         <span className="ml-auto hidden font-mono text-[9px] text-zinc-600 lg:inline">Teclado: A W S E D F T G Y H U J K = notas</span>
       </div>
@@ -52,6 +61,11 @@ function TrackDetail() {
             <SamplerEditor track={track} />
           </div>
         )}
+        {track.kind === 'voz' && (
+          <div className="panel-inset p-3">
+            <VoiceEditor track={track} />
+          </div>
+        )}
         <div className="panel-inset p-3">{track.group === 'drum' ? <DrumEditor track={track} /> : <PianoRoll track={track} />}</div>
       </div>
     </div>
@@ -59,6 +73,7 @@ function TrackDetail() {
 }
 
 export default function App() {
+  const tracks = useStore((s) => s.tracks);
   useEffect(() => {
     const unbind = bindEngine();
     engine.onSampleChange = () => useStore.getState().setRuntime({ sampleVersion: useStore.getState().sampleVersion + 1 });
@@ -103,7 +118,7 @@ export default function App() {
           <TrackDetail />
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-2 pb-1">
             <span className="text-[9px] uppercase tracking-[0.25em] text-zinc-600">
-              YUVONEITOR2000 · Web Audio Synthesis Engine · 11 tracks · 8 scenes · 16 steps
+              YUVONEITOR2000 · Web Audio Synthesis Engine · {tracks.length} tracks · 8 scenes · 16 steps
             </span>
             <div className="ml-auto flex flex-wrap items-center gap-1.5">
               <ProjectIO />

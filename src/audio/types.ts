@@ -1,3 +1,5 @@
+import type { VoiceLang } from './voice';
+
 export type TrackKind =
   | 'kick'
   | 'snare'
@@ -9,7 +11,8 @@ export type TrackKind =
   | 'pad'
   | 'ambient'
   | 'pluck'
-  | 'sampler';
+  | 'sampler'
+  | 'voz';
 
 export type Wave = 'sawtooth' | 'square' | 'triangle' | 'sine' | 'noise' | 'supersaw';
 export type FilterType = 'lowpass' | 'highpass' | 'bandpass' | 'notch';
@@ -55,6 +58,15 @@ export interface Track {
   mono: boolean;
   baseNote: number;
   params: TrackParams;
+  /** Solo para pistas 'voz': texto y estilo del canto robot */
+  voice?: VoiceSettings;
+}
+
+export interface VoiceSettings {
+  text: string; // frase a cantar: cada paso activado dice una palabra
+  speed: number; // 0.5..2.5 — multiplicador de velocidad del habla
+  vibrato: number; // 0..1 — profundidad del vibrato del buzzer
+  lang: VoiceLang; // fonética castellana o inglesa
 }
 
 export interface Step {
@@ -167,7 +179,49 @@ export const createTracks = (): Track[] => [
       release: 0.15, reverb: 0.3, delay: 0.45, volume: 0.36, gate: 0.5, pan: 0.3 }) },
   { id: 'sampler', name: 'Sampler', short: 'SM', kind: 'sampler', color: '#ff4d8d', group: 'sampler', mono: false, baseNote: 60,
     params: p({ wave: 'sine', attack: 0.002, decay: 0.3, sustain: 1, release: 0.08, volume: 0.6, gate: 2, reverb: 0.2 }) },
+  // el robot canta en el demo: "we are the robots"
+  createVoiceTrack(1),
 ];
+
+/** Ids de las pistas fijas de fábrica (el resto son agregadas por el usuario) */
+export const DEFAULT_TRACK_IDS: readonly string[] = [
+  'kick', 'snare', 'chh', 'ohh', 'clap', 'moog', 'acid', 'pad', 'ambient', 'pluck', 'sampler', 'voz1',
+];
+
+export const DEFAULT_VOICE: VoiceSettings = {
+  text: 'we are the robots',
+  speed: 1,
+  vibrato: 0.08,
+  lang: 'en',
+};
+
+/** Crea una pista de canto robot (voz de formantes estilo Kraftwerk) */
+export const createVoiceTrack = (n: number): Track => ({
+  id: `voz${n}`,
+  name: n <= 1 ? 'Robo Voice' : `Robo Voice ${n}`,
+  short: n <= 1 ? 'RB' : `RB${n}`,
+  kind: 'voz',
+  color: '#f43f5e',
+  group: 'synth',
+  mono: true,
+  baseNote: 57,
+  params: p({
+    wave: 'sawtooth',
+    cutoff: 1,
+    resonance: 0.7,
+    filterEnv: 0,
+    attack: 0.01,
+    decay: 0.2,
+    sustain: 0.9,
+    release: 0.08,
+    drive: 0.18,
+    volume: 0.7,
+    gate: 2.6,
+    reverb: 0.22,
+    delay: 0.18,
+  }),
+  voice: { ...DEFAULT_VOICE },
+});
 
 export const emptyPattern = (): Pattern => Array.from({ length: STEPS }, () => ({ n: [], a: false }));
 
@@ -186,12 +240,13 @@ export const createScenes = (tracks: Track[]): Scene[] => {
   const blank = (): Record<string, Pattern> => Object.fromEntries(tracks.map((t) => [t.id, emptyPattern()]));
   const scenes: Scene[] = SCENE_NAMES.map((n) => ({ name: `Escena ${n}`, patterns: blank() }));
 
-  // A — groove básico
+  // A — groove básico + el robot presenta la frase
   Object.assign(scenes[0].patterns, {
     kick: drum('x...x...x...x...'),
     chh: drum('..x...x...x...x.'),
     moog: mel([33, _, _, 33, _, _, 45, _, 33, _, _, 36, _, 38, _, _]),
     pad: mel([[57, 60, 64], _, _, _, _, _, _, _, [55, 60, 64], _, _, _, _, _, _, _]),
+    voz1: mel([57]),
   });
   // B — entra el acid y el clap
   Object.assign(scenes[1].patterns, {
@@ -203,13 +258,14 @@ export const createScenes = (tracks: Track[]): Scene[] => {
     moog: mel([33, _, _, 33, _, _, 45, _, 33, _, _, 36, _, 38, _, _]),
     acid: mel([45, 45, 57, 45, 48, 45, 60, 45, 43, 55, 45, 57, 46, 45, 58, 48], 'x...x..x..x...x.'),
   });
-  // C — breakdown atmosférico
+  // C — breakdown atmosférico + voz grave
   Object.assign(scenes[2].patterns, {
     pad: mel([[57, 60, 64, 67], _, _, _, _, _, _, _, [53, 57, 60, 64], _, _, _, _, _, _, _]),
     ambient: mel([76, _, _, _, _, _, 79, _, _, _, 72, _, _, _, _, _]),
     pluck: mel([69, _, 72, _, 76, _, 72, _, 69, _, 74, _, 77, _, 74, 72]),
     chh: drum('..x...x...x...x.'),
     sampler: mel([60, _, _, _, _, _, _, _, 67, _, _, _, _, _, _, _]),
+    voz1: mel([53]),
   });
   // D — todo junto
   Object.assign(scenes[3].patterns, {
@@ -223,6 +279,7 @@ export const createScenes = (tracks: Track[]): Scene[] => {
     pad: mel([[57, 60, 64], _, _, _, _, _, _, _, [55, 59, 62], _, _, _, _, _, _, _]),
     pluck: mel([81, _, _, 76, _, _, 72, _, 79, _, _, 74, _, _, 71, _]),
     sampler: mel([_, _, _, _, 60, _, _, _, _, _, _, _, 62, _, _, _]),
+    voz1: mel([57, _, _, _, _, _, _, _, 55]), // reinicia a mitad del compás: chop robot
   });
   return scenes;
 };
