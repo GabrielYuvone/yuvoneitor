@@ -3,8 +3,11 @@ import { persist } from 'zustand/middleware';
 import {
   createScenes,
   createTracks,
+  createVoiceTrack,
   DEFAULT_MASTER,
   DEFAULT_SAMPLER,
+  DEFAULT_TRACK_IDS,
+  DEFAULT_VOICE,
   emptyPattern,
   STEPS,
   type MasterParams,
@@ -13,6 +16,7 @@ import {
   type Scene,
   type Track,
   type TrackParams,
+  type VoiceSettings,
 } from '../audio/types';
 
 export type PlayMode = 'pattern' | 'song';
@@ -61,6 +65,12 @@ interface State {
   clearScene: () => void;
   setRuntime: (p: Partial<Pick<State, 'playing' | 'playStep' | 'playScene' | 'songPos' | 'sampleVersion'>>) => void;
   resetAll: () => void;
+  /** Agrega una pista nueva de canto robot y la selecciona */
+  addVoiceTrack: () => void;
+  /** Quita una pista agregada por el usuario (no permite quitar las de fábrica) */
+  removeTrack: (id: string) => void;
+  /** Ajusta el texto/velocidad/vibrato de una pista de voz */
+  setVoice: (id: string, p: Partial<VoiceSettings>) => void;
   loadProject: (d: {
     tracks: Track[];
     scenes: Scene[];
@@ -221,6 +231,33 @@ export const useStore = create<State>()(
       setRuntime: (p) => set(p),
       resetAll: () => set({ ...initial() }),
 
+      addVoiceTrack: () =>
+        set((s) => {
+          let n = s.tracks.filter((t) => t.kind === 'voz').length + 1;
+          while (s.tracks.some((t) => t.id === `voz${n}`)) n++;
+          const track = createVoiceTrack(n);
+          const scenes = s.scenes.map((sc) => ({ ...sc, patterns: { ...sc.patterns, [track.id]: emptyPattern() } }));
+          return { tracks: [...s.tracks, track], scenes, selectedTrack: track.id };
+        }),
+
+      removeTrack: (id) =>
+        set((s) => {
+          if (DEFAULT_TRACK_IDS.includes(id)) return {};
+          const tracks = s.tracks.filter((t) => t.id !== id);
+          if (tracks.length === s.tracks.length) return {};
+          const scenes = s.scenes.map((sc) => {
+            const patterns = { ...sc.patterns };
+            delete patterns[id];
+            return { ...sc, patterns };
+          });
+          return { tracks, scenes, selectedTrack: s.selectedTrack === id ? 'acid' : s.selectedTrack };
+        }),
+
+      setVoice: (id, p) =>
+        set((s) => ({
+          tracks: s.tracks.map((t) => (t.id === id ? { ...t, voice: { ...(t.voice ?? DEFAULT_VOICE), ...p } } : t)),
+        })),
+
       loadProject: (d) =>
         set(() => ({
           tracks: clone(d.tracks),
@@ -277,6 +314,27 @@ export const useStore = create<State>()(
         selectedScene: s.selectedScene,
         selectedTrack: s.selectedTrack,
       }),
+      // estados guardados con menos pistas: completa patterns y settings de voz
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<State>;
+        const saved = Array.isArray(p.tracks) ? p.tracks : [];
+        let tracks: Track[];
+        if (!saved.length) {
+          tracks = current.tracks;
+        } else {
+          // re-agrega pistas de fábrica que no existían cuando se guardó (p.ej. voz1)
+          const missing = createTracks().filter((d) => !saved.some((t) => t.id === d.id));
+          tracks = [
+            ...saved.map((t) => (t.kind === 'voz' ? { ...t, voice: { ...DEFAULT_VOICE, ...t.voice } } : t)),
+            ...missing,
+          ];
+        }
+        const scenes = (p.scenes ?? current.scenes).map((sc) => ({
+          ...sc,
+          patterns: Object.fromEntries(tracks.map((t) => [t.id, sc.patterns[t.id] ?? emptyPattern()])),
+        }));
+        return { ...current, ...p, tracks, scenes };
+      },
     },
   ),
 );

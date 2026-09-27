@@ -1,7 +1,10 @@
 import {
   createTracks,
+  createVoiceTrack,
   DEFAULT_MASTER,
   DEFAULT_SAMPLER,
+  DEFAULT_TRACK_IDS,
+  DEFAULT_VOICE,
   emptyPattern,
   SCENE_NAMES,
   STEPS,
@@ -38,6 +41,8 @@ export interface ProjectData {
   scenes: Scene[];
   master: MasterParams;
   sampler: SamplerSettings;
+  /** pistas agregadas por el usuario (voz robot); opcional para compatibilidad */
+  extraTracks?: Track[];
 }
 
 export interface ProjectFile {
@@ -204,6 +209,7 @@ export function buildProjectFile(s: {
       scenes: JSON.parse(JSON.stringify(s.scenes)),
       master: { ...s.master },
       sampler: { ...s.sampler },
+      extraTracks: JSON.parse(JSON.stringify(s.tracks.filter((t) => !DEFAULT_TRACK_IDS.includes(t.id)))),
     },
   };
 }
@@ -238,8 +244,45 @@ export function parseProjectFile(raw: unknown): ProjectData {
   const tracks: Track[] = defaults.map((def) => {
     const rawT = byId.get(def.id);
     const params = sanitizeParams(isRecord(rawT) ? (rawT as Record<string, unknown>).params : undefined, def.params);
-    return { ...def, params };
+    // la voz de fábrica conserva su texto/configuración guardada si existe
+    let voice = def.voice;
+    if (def.kind === 'voz' && isRecord(rawT) && isRecord((rawT as Record<string, unknown>).voice)) {
+      const v = (rawT as Record<string, unknown>).voice as Record<string, unknown>;
+      voice = {
+        text: str(v.text, DEFAULT_VOICE.text, 160),
+        speed: num(v.speed, DEFAULT_VOICE.speed, 0.5, 2.5),
+        vibrato: num(v.vibrato, DEFAULT_VOICE.vibrato, 0, 1),
+        lang: oneOf(v.lang, DEFAULT_VOICE.lang, ['es', 'en'] as const),
+      };
+    }
+    return { ...def, params, voice };
   });
+
+  // pistas agregadas por el usuario (hoy: solo 'voz'); el resto se ignora
+  const extrasRaw = Array.isArray(d.extraTracks) ? (d.extraTracks as unknown[]) : [];
+  const extras: Track[] = [];
+  for (const rawX of extrasRaw.slice(0, 4)) {
+    if (!isRecord(rawX) || rawX.kind !== 'voz') continue;
+    const def = createVoiceTrack(extras.length + 1);
+    const id = typeof rawX.id === 'string' && /^voz\d+$/.test(rawX.id) ? rawX.id : def.id;
+    if (trackIds.includes(id) || extras.some((e) => e.id === id)) continue;
+    const v = isRecord(rawX.voice) ? rawX.voice : {};
+    extras.push({
+      ...def,
+      id,
+      name: str(rawX.name, def.name, 24),
+      short: str(rawX.short, def.short, 3),
+      params: sanitizeParams(rawX.params, def.params),
+      voice: {
+        text: str(v.text, DEFAULT_VOICE.text, 160),
+        speed: num(v.speed, DEFAULT_VOICE.speed, 0.5, 2.5),
+        vibrato: num(v.vibrato, DEFAULT_VOICE.vibrato, 0, 1),
+        lang: oneOf(v.lang, DEFAULT_VOICE.lang, ['es', 'en'] as const),
+      },
+    });
+  }
+  const allTracks = [...tracks, ...extras];
+  const allIds = [...trackIds, ...extras.map((e) => e.id)];
 
   const rawScenes = Array.isArray(d.scenes) ? (d.scenes as unknown[]) : [];
   if (!rawScenes.length) throw new Error('Proyecto corrupto: no contiene escenas.');
@@ -247,7 +290,7 @@ export function parseProjectFile(raw: unknown): ProjectData {
     const r = isRecord(rs) ? rs : {};
     return {
       name: str(r.name, `Escena ${SCENE_NAMES[i] ?? i + 1}`, 40),
-      patterns: sanitizePatterns(r.patterns, trackIds),
+      patterns: sanitizePatterns(r.patterns, allIds),
     };
   });
 
@@ -259,7 +302,7 @@ export function parseProjectFile(raw: unknown): ProjectData {
         .slice(0, 64)
     : [];
 
-  const trackIdsSet = new Set(trackIds);
+  const allIdsSet = new Set(allIds);
   return {
     bpm: int(d.bpm, 124, 60, 200),
     swing: num(d.swing, 0.08, 0, 0.6),
@@ -267,8 +310,8 @@ export function parseProjectFile(raw: unknown): ProjectData {
     song,
     songLoop: bool(d.songLoop, true),
     selectedScene: int(d.selectedScene, 0, 0, Math.max(0, scenes.length - 1)),
-    selectedTrack: typeof d.selectedTrack === 'string' && trackIdsSet.has(d.selectedTrack) ? d.selectedTrack : 'acid',
-    tracks,
+    selectedTrack: typeof d.selectedTrack === 'string' && allIdsSet.has(d.selectedTrack) ? d.selectedTrack : 'acid',
+    tracks: allTracks,
     scenes,
     master: sanitizeMaster(d.master),
     sampler: sanitizeSampler(d.sampler),
